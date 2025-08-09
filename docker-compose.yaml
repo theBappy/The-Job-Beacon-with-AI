@@ -1,0 +1,17 @@
+
+services:
+  db:
+    image: postgres:17.0
+    container_name: jobboard-db
+    restart: always
+    ports:
+      - "5433:5432"                  # Maps host 5432 → container 5432
+    environment:
+      POSTGRES_USER: postgres        # DB username
+      POSTGRES_PASSWORD: password    # DB password (change this to a strong password)
+      POSTGRES_DB: job-beacon-ai     # DB name
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # Persist data in named volume
+
+volumes:
+  pgdata:
