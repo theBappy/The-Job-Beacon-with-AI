@@ -5,7 +5,7 @@ import {
   SidebarGroupAction,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
-import { SidebarOrganizationButton } from "@/features/organtizations/sidebar-organization-button";
+import { SidebarOrganizationButton } from "@/features/organizations/sidebar-organization-button";
 import { getCurrentOrganization } from "@/services/clerk/lib/get-current-auth";
 import { ClipboardListIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";

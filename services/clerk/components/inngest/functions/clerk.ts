@@ -12,7 +12,9 @@ import {
   deleteOrganization,
   insertOrganization,
   updateOrganization,
-} from "@/features/organtizations/organizations";
+} from "@/features/organizations/organizations";
+import { db } from "@/drizzle/db";
+import { UserTable, UserNotificationSettingsTable } from "@/drizzle/schema";
 
 function verifyWebhook({
   raw,
@@ -25,46 +27,48 @@ function verifyWebhook({
 }
 
 export const clerkCreateUser = inngest.createFunction(
-  {
-    id: "clerk/create-db-user",
-    name: "Clerk - Create DB User",
-  },
+  { id: "clerk/create-db-user", name: "Clerk - Create DB User" },
   {
     event: "clerk/user.created",
   },
   async ({ event, step }) => {
+    // Verify the webhook first. This is a good practice.
     await step.run("verify-webhook", async () => {
       try {
         verifyWebhook(event.data);
-      } catch (error) {
-        console.error("Webhook verification failed:", error);
+      } catch {
         throw new NonRetriableError("Invalid webhook");
       }
     });
 
-    const userId = await step.run("create-user", async () => {
-      const userData = event.data.data;
-      const email = userData.email_addresses.find(
-        (email) => email.id === userData.primary_email_address_id
-      );
+    const userData = event.data.data;
+    const email = userData.email_addresses.find(
+      (email) => email.id === userData.primary_email_address_id
+    );
 
-      if (email == null) {
-        throw new NonRetriableError("No primary email address found");
-      }
-      await insertUser({
-        id: userData.id,
-        name: `${userData.first_name} ${userData.last_name}`,
-        imageUrl: userData.image_url,
-        email: email.email_address,
-        createdAt: new Date(userData.created_at),
-        updatedAt: new Date(userData.updated_at),
-      });
-      return userData.id;
-    });
+    if (email == null) {
+      throw new NonRetriableError("No primary email address found");
+    }
 
-    await step.run("create-user-notification-settings", async () => {
-      await insertUserNotificationSettings({
-        userId,
+    // Combine both database operations into a single, atomic step.
+    // This uses Drizzle's transaction to ensure that both the user and their
+    // notification settings are created together, or neither is.
+    await step.run("create-user-and-settings", async () => {
+      await db.transaction(async (tx) => {
+        // First, insert the user.
+        await tx.insert(UserTable).values({
+          id: userData.id,
+          name: `${userData.first_name} ${userData.last_name}`,
+          imageUrl: userData.image_url,
+          email: email.email_address,
+          createdAt: new Date(userData.created_at),
+          updatedAt: new Date(userData.updated_at),
+        });
+
+        // Then, insert their notification settings.
+        await tx.insert(UserNotificationSettingsTable).values({
+          userId: userData.id,
+        });
       });
     });
   }
@@ -137,8 +141,7 @@ export const clerkCreateOrganization = inngest.createFunction(
     await step.run("verify-webhook", async () => {
       try {
         verifyWebhook(event.data);
-      } catch (error) {
-        console.error("Webhook verification failed:", error);
+      } catch {
         throw new NonRetriableError("Invalid webhook");
       }
     });
