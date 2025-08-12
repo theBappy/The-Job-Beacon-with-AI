@@ -61,3 +61,6 @@ export function formatJobType(type: JobListingType) {
       throw new Error(`Unknown job type: ${type satisfies never}`)
   }
 }
+
+
+
