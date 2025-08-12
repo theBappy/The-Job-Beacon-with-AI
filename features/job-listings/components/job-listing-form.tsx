@@ -34,6 +34,12 @@ import {
   formatWageInterval,
 } from "../lib/formatter";
 import { StateSelectItems } from "./state-select-items";
+import { MarkdownEditor } from "../../../services/clerk/components/markdown/markdown-editor";
+import { Button } from "@/components/ui/button";
+import { LoadingSwap } from "@/services/clerk/components/loading-swap";
+import { Loader2Icon } from "lucide-react";
+import { createJobListing } from "../actions/actions";
+import { toast } from "sonner";
 
 const NONE_SELECT_VALUE = "none";
 
@@ -53,8 +59,12 @@ export function JobListingForm() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof jobListingSchema>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof jobListingSchema>) {
+    const res = createJobListing(data);
+
+    if (res.error) {
+      toast.error(res.message);
+    }
   }
 
   return (
@@ -175,6 +185,7 @@ export function JobListingForm() {
                       <StateSelectItems />
                     </SelectContent>
                   </Select>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -266,7 +277,16 @@ export function JobListingForm() {
               <FormMessage />
             </FormItem>
           )}
-        ></FormField>
+        />
+        <Button
+          disabled={form.formState.isSubmitting}
+          type="button"
+          className="w-full"
+        >
+          <LoadingSwap isLoading={form.formState.isSubmitting}>
+            Create Job Listing
+          </LoadingSwap>
+        </Button>
       </form>
     </Form>
   );
