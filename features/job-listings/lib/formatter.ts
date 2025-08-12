@@ -1,6 +1,7 @@
 import {
   ExperienceLevel,
   experienceLevels,
+  JobListingStatus,
   JobListingType,
   LocationRequirement,
   WageInterval,
@@ -52,15 +53,61 @@ export function formatExperienceLevel(experienceLevel: ExperienceLevel) {
 export function formatJobType(type: JobListingType) {
   switch (type) {
     case "full-time":
-      return "Full Time"
+      return "Full Time";
     case "part-time":
-      return "Part Time"
+      return "Part Time";
     case "internship":
-      return "Internship"
+      return "Internship";
     default:
-      throw new Error(`Unknown job type: ${type satisfies never}`)
+      throw new Error(`Unknown job type: ${type satisfies never}`);
   }
 }
 
+export function formatJobListingStatus(status: JobListingStatus) {
+  switch (status) {
+    case "published":
+      return "Active";
+    case "draft":
+      return "Draft";
+    case "delisted":
+      return "Delisted";
+    default:
+      throw new Error(`Unknown status: ${status satisfies never}`);
+  }
+}
 
+export function formatWage(wage: number, wageInterval: WageInterval) {
+  const wageFormat = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+  });
 
+  switch (wageInterval) {
+    case "hourly": {
+      return `${wageFormat.format(wage)} /hr`;
+    }
+    case "yearly": {
+      return wageFormat.format(wage);
+    }
+    default:
+      throw new Error(`Unknown wage interval: ${wageInterval satisfies never}`);
+  }
+}
+
+export function formatJoblistingLocation({
+  stateAbbreviation,
+  city,
+}: {
+  stateAbbreviation: string | null;
+  city: string | null;
+}) {
+  if (stateAbbreviation == null && city == null) return "None";
+
+  const locationParts = [];
+  if (city != null) locationParts.push(city);
+  if (stateAbbreviation != null)
+    locationParts.push(stateAbbreviation.toUpperCase());
+
+  return locationParts.join(", ");
+}
