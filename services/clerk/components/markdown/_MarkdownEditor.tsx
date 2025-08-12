@@ -1,9 +1,12 @@
-"use client"
+"use client";
 
 import { cn } from "@/lib/utils";
 import { MDXEditorProps, MDXEditorMethods, MDXEditor } from "@mdxeditor/editor";
 import { Ref } from "react";
 import { useIsDarkMode } from "../use-is-dark-mode";
+
+export const markdownClassNames =
+  "max-w-none prose prose-neutral dark:prose-invert font-sans";
 
 export default function InternalMarkdownEditor({
   ref,
@@ -14,7 +17,8 @@ export default function InternalMarkdownEditor({
   return (
     <MDXEditor
       {...props}
-      className={cn(MarkdownClassNames, isDarkMode && "dark-theme", className)}
+      ref={ref}
+      className={cn(markdownClassNames, isDarkMode && "dark-theme", className)}
     />
   );
 }
